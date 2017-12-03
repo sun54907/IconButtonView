@@ -85,9 +85,7 @@
 			children = (
 				C26F60C11FD4291F001BDF88 /* AppDelegate.swift */,
 				C26F60C31FD4291F001BDF88 /* ViewController.swift */,
-				C26F60E21FD429B5001BDF88 /* IconButtonView.swift */,
-				C26F60E61FD42A51001BDF88 /* IconButtonView.xib */,
-				C26F60E31FD429B5001BDF88 /* HighlightedButton.swift */,
+				C2CA087B1FD4373400591936 /* Library */,
 				C26F60C51FD4291F001BDF88 /* Main.storyboard */,
 				C26F60C81FD4291F001BDF88 /* Assets.xcassets */,
 				C26F60CA1FD4291F001BDF88 /* LaunchScreen.storyboard */,
@@ -103,6 +101,16 @@
 				C26F60D81FD4291F001BDF88 /* Info.plist */,
 			);
 			path = buttonSampleTests;
+			sourceTree = "<group>";
+		};
+		C2CA087B1FD4373400591936 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				C26F60E21FD429B5001BDF88 /* IconButtonView.swift */,
+				C26F60E61FD42A51001BDF88 /* IconButtonView.xib */,
+				C26F60E31FD429B5001BDF88 /* HighlightedButton.swift */,
+			);
+			path = Library;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
