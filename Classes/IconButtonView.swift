@@ -7,8 +7,6 @@
 //
 
 import UIKit
-import RxSwift
-import RxCocoa
 
 protocol IconButtonViewStyle {
     var font: UIFont { get }
@@ -50,7 +48,7 @@ final class IconButtonView: UIView {
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var leftImageView: UIImageView!
     @IBOutlet private weak var rightImageView: UIImageView!
-    @IBOutlet private weak var button: CCHighlightedButton!
+    @IBOutlet private weak var button: HighlightedButton!
 
     @IBOutlet private weak var innerViewLeftConstraint: NSLayoutConstraint!
     @IBOutlet private weak var innerViewRightConstraint: NSLayoutConstraint!
@@ -61,14 +59,14 @@ final class IconButtonView: UIView {
 
 extension IconButtonView {
     struct Data {
-        let text: String?
+        let title: String?
         let leftImage: UIImage?
         let rightImage: UIImage?
 
-        init(text: String? = nil, leftImage: UIImage? = nil, needRightImage: Bool = false) {
-            self.text = text
+        init(title: String? = nil, leftImage: UIImage? = nil, rightImage: UIImage? = nil) {
+            self.title = title
             self.leftImage = leftImage
-            self.rightImage = needRightImage ? #imageLiteral(resourceName: "arrowGray") : nil
+            self.rightImage = rightImage
         }
     }
 
@@ -79,7 +77,7 @@ extension IconButtonView {
         let border: UIColor?
     }
 
-    enum ColorType: ColorThemeAvailable {
+    enum ColorType {
         typealias ColorTheme = IconButtonView.ColorTheme
         case primary
         case secondary
@@ -89,32 +87,32 @@ extension IconButtonView {
         var colorTheme: ColorTheme {
             switch self {
             case .primary:
-                return .init(normal: UIColor.tapple.pink,
-                             highlighted: UIColor.tapple.darkPink,
+                return .init(normal: UIColor.red,
+                             highlighted: UIColor.red.lighter()!,
                              title: .white,
                              border: nil)
             case .secondary:
-                return .init(normal: UIColor.tapple.palePink,
-                             highlighted: UIColor.tapple.lightPink,
-                             title: UIColor.tapple.pink,
+                return .init(normal: UIColor.orange,
+                             highlighted: UIColor.orange.lighter()!,
+                             title: UIColor.orange.darker()!,
                              border: nil)
             case .primaryBorder:
                 return .init(normal: .white,
-                             highlighted: UIColor.tapple.gray5,
-                             title: UIColor.tapple.pink,
-                             border: UIColor.tapple.pink)
+                             highlighted: UIColor.gray,
+                             title: UIColor.red,
+                             border: UIColor.red)
             case .normal:
                 return .init(normal: .white,
-                             highlighted: UIColor.tapple.gray5,
-                             title: UIColor.tapple.secondaryText,
+                             highlighted: UIColor.lightGray,
+                             title: UIColor.gray,
                              border: nil)
             }
         }
 
         var disableColorTheme: ColorTheme {
-            return .init(normal: UIColor.tapple.gray5NotTransparent,
-                         highlighted: UIColor.tapple.gray5NotTransparent,
-                         title: UIColor.tapple.gray20,
+            return .init(normal: UIColor.lightGray,
+                         highlighted: UIColor.lightGray,
+                         title: UIColor.darkGray,
                          border: nil)
         }
     }
@@ -217,7 +215,7 @@ extension IconButtonView {
     ///   - data: 表示するdata
     ///   - customStyle: layout調整用。色々指定できる。
     ///   - colorType: 色
-    static func instantiate(data: Data? = nil, customStyle: IconButtonViewStyle, colorType: ColorType) -> IconButtonView {
+    static func create(data: Data? = nil, customStyle: IconButtonViewStyle, colorType: ColorType) -> IconButtonView {
         let view = IconButtonView.instantiate()
         view.prepareUI(style: customStyle)
         view.colorType = colorType
@@ -231,12 +229,8 @@ extension IconButtonView {
     ///   - data: 表示するdata
     ///   - style: layout. wrapContent型を使う場合、stackViewの中に置かないと動かないので注意
     ///   - colorType: 色
-    static func instantiate(data: Data? = nil, style: Style, colorType: ColorType) -> IconButtonView {
-        return instantiate(data: data, customStyle: style, colorType: colorType)
-    }
-
-    var rxTap: ControlEvent<Void> {
-        return button.rx.tap
+    static func create(data: Data? = nil, style: Style, colorType: ColorType) -> IconButtonView {
+        return create(data: data, customStyle: style, colorType: colorType)
     }
 
     private func prepareUI(style: IconButtonViewStyle) {
@@ -266,8 +260,8 @@ extension IconButtonView {
     private func setData(_ data: Data?) {
         let data = data ?? Data()
 
-        label.isHidden = data.text == nil
-        label.text = data.text
+        label.isHidden = data.title == nil
+        label.text = data.title
 
         let imagePairs: [(UIImageView, UIImage?)] = [(leftImageView, data.leftImage), (rightImageView, data.rightImage)]
         imagePairs.forEach { (imageView, image) in
@@ -287,7 +281,8 @@ extension IconButtonView {
         button.highlightedColor = colorTheme.highlighted
 
         [leftImageView, rightImageView].forEach { imageView in
-            imageView.image = imageView.image?.tintedImage(with: colorTheme.title)
+            imageView?.image = imageView?.image?.withRenderingMode(.alwaysTemplate)
+            imageView?.tintColor = colorTheme.title
         }
 
         backgroundColorView.layer.borderColor = colorTheme.border?.cgColor
@@ -322,3 +317,49 @@ extension IconButtonView {
         }
     }
 }
+
+// MARK: - other extensions
+
+extension UIColor {
+
+    func lighter(by percentage:CGFloat=30.0) -> UIColor? {
+        return self.adjust(by: abs(percentage) )
+    }
+
+    func darker(by percentage:CGFloat=30.0) -> UIColor? {
+        return self.adjust(by: -1 * abs(percentage) )
+    }
+
+    func adjust(by percentage:CGFloat=30.0) -> UIColor? {
+        var r:CGFloat=0, g:CGFloat=0, b:CGFloat=0, a:CGFloat=0;
+        if(self.getRed(&r, green: &g, blue: &b, alpha: &a)){
+            return UIColor(red: min(r + percentage/100, 1.0),
+                           green: min(g + percentage/100, 1.0),
+                           blue: min(b + percentage/100, 1.0),
+                           alpha: a)
+        }else{
+            return nil
+        }
+    }
+}
+
+extension NSObject {
+    class func instantiate(nibName nameOrNil: String? = nil, bundle bundleOrNil: Bundle? = nil, withOwner ownerOrNil: Any? = nil, options optionsOrNil: [AnyHashable : Any]? = nil) -> Self {
+        let nibName = (nameOrNil ?? "\(self)")
+        return UINib.instantiate(type:self, nibName:nibName, bundle:bundleOrNil, withOwner:ownerOrNil, options:optionsOrNil)!
+    }
+}
+
+
+extension UINib {
+    class func instantiate<T>(type:T.Type, nibName name: String, bundle bundleOrNil: Bundle?, withOwner ownerOrNil: Any?, options optionsOrNil: [AnyHashable : Any]? = nil) -> T? {
+
+        for any in self.init(nibName:name, bundle:bundleOrNil).instantiate(withOwner:ownerOrNil, options:optionsOrNil) {
+            if let obj = any as? T {
+                return obj
+            }
+        }
+        return nil
+    }
+}
+
